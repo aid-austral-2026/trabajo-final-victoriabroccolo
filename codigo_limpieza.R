@@ -3,6 +3,15 @@
 # TP Final Broccolo
 
 ################################
+# SELECCIÓN 
+################################
+
+# El Servicio Meteorológico Nacional publica diferentes mediciones que se realizan de temperaturas, viento, humedad, 
+# precipitaciones, etc. en diferentes lugares del país en la web (https://datos.gob.ar/dataset/?_tags_limit=0).
+# En el presente trabajo, se utilizaron los datos publicados sobre mediciones efectuadas en diferentes puntos del país
+# en el último año.
+
+################################
 # IMORTACIÓN Y LIMPIEZA DE DATOS
 ################################
 
@@ -172,7 +181,6 @@ knitr::kable(resumen, digits = 2)
 # indicando una posible asimetría positiva asociada a episodios de lluvia de gran magnitud.
 
 library(ggplot2)
-library(dplyr)
 
 # Se realizan los boxplots para ver descriptivamente las variables y detectar outliers. Sin embargo, es difícil comparar las 
 # variables porque poseen distintas magnitudes y unidades. Esto genera que, por ejemplo, la variable precipitación domine el 
@@ -226,7 +234,91 @@ ggplot(datos_box,
     axis.text.x = element_text(size = 10,
                                lineheight = 0.9))
 
+# Matriz de correlaciones
 
+# Se realiza una matriz de correlaciones donde, en la diagonal, se ven las variables con su histograma y curva de densidad; 
+# por debajo, los gráficos de dispersión; y por encima, los coeficientes de correlación.
+
+datos_cor <- datos_met_long %>%
+  pivot_wider(names_from = `Valor Medio de`,
+              values_from = Valor)
+
+glimpse(datos_cor)
+
+datos_numericos <- datos_cor %>%
+  select(where(is.numeric)) # seleccionar solo variables numéricas.
+
+cor(datos_numericos, 
+    use = "pairwise.complete.obs") 
+
+# Se calcula los coeficientes de correlación entre variables.
+# Para cada par de variables, se usa únicamente las observaciones disponibles para ese par.
+
+library(psych)
+
+pairs.panels(datos_numericos,
+             method = "pearson",   # Método de correlación
+             hist.col = "#00AFBB",
+             density = TRUE,        # Muestra los gráficos de densidad
+             ellipses = FALSE)      # Si es T muestra elipses de correlación
+
+# En base a la matriz de correlaciones, se puede concluir que las variables térmicas tienen una correlación positiva
+# muy fuerte, lo que indica que están muy correlacionadas. Otra relación muy positiva es la de Precipitación y 
+# frecuencia de días con precipitación, lo cual es lógico porque cuando llueve más, suele haber más días con lluvia.
+# Existen otras variables con correlaciones moderadas, como nubosidad con temperatura (-0.55), y precipitación con humedad 
+# relativa (0.40), entre otras. Además, hay correlaciones muy mínimas, lo que indica muy poca relación entre las variables, como
+# es el caso de humedad relativa con temperatura mínima (0.02).
+
+# Identificación de estaciones con valores extremos (junto con mes en que se indentificaron)
+
+# Estaciones con temperaturas máximas más altas
+
+datos_cor %>%
+  arrange(desc(`Temperatura maxima (grados C)`)) %>%
+  select(Estacion,
+         Mes, 
+         `Temperatura maxima (grados C)`) %>%
+  head(10)
+
+# Estaciones con temperaturas mínimas más bajas
+
+datos_cor %>%
+  arrange(`Temperatura minima (grados C)`) %>%
+  select(Estacion, 
+         Mes, 
+         `Temperatura minima (grados C)`) %>%
+  head(10)
+
+# Estaciones con mayores precipitaciones
+
+datos_cor %>%
+  arrange(desc(`Precipitacion (mm)`)) %>%
+  select(Estacion, 
+         Mes, 
+         `Precipitacion (mm)`) %>%
+  head(10)
+
+# Estaciones con mayor humedad
+
+datos_cor %>%
+  arrange(desc(`Humedad relativa (%)`)) %>%
+  select(Estacion,
+         Mes,
+         `Humedad relativa (%)`) %>%
+  head(10)
+
+library(plotly)
+
+ggplot(datos_cor,
+       aes(x = `Temperatura maxima (grados C)`, `Temperatura minima (grados C)`,
+           `Precipitacion (mm)`, `Humedad relativa (%)`,
+           y = Mes,
+           text = Estacion)) +
+  geom_point()
+
+ggplotly()
+
+# Reveer este gráfico y empezar con georeferencia
 
 
 
