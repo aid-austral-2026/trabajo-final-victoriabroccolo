@@ -89,25 +89,17 @@ na_heatmap$Mes <- factor(
 
 library(ggplot2)
 
-ggplot(
-  na_heatmap,
-  aes(
-    x = Mes,
-    y = `Valor Medio de`,
-    fill = porcentaje_na
-  )
-) +
+ggplot(na_heatmap, 
+       aes(x = Mes, 
+           y = `Valor Medio de`, 
+           fill = porcentaje_na)) +
   geom_tile(color = "white") +
   scale_fill_viridis_c(
-    name = "% NA"
-  ) +
-  labs(
-    title = "Porcentaje de datos faltantes",
-    x = "Mes",
-    y = "Variable meteorológica"
-  ) +
+    name = "% NA") +
+  labs(title = "Porcentaje de datos faltantes", 
+       x = "Mes", 
+       y = "Variable meteorológica") +
   theme_minimal()
-
 
 # El análisis de datos faltantes mostró que la ausencia de información se concentra 
 # principalmente en las variables Velocidad del Viento, Precipitación y Frecuencia de días con precipitación. 
@@ -152,8 +144,7 @@ resumen <- datos_met_long %>%
     media = mean(Valor, na.rm = TRUE),
     q3 = quantile(Valor, 0.75, na.rm = TRUE),
     maximo = max(Valor, na.rm = TRUE),
-    sd = sd(Valor, na.rm = TRUE)
-  )
+    sd = sd(Valor, na.rm = TRUE))
 
 knitr::kable(resumen, digits = 2)
 
@@ -180,14 +171,12 @@ knitr::kable(resumen, digits = 2)
 # relativamente simétricas; no obstante, la precipitación muestra una diferencia más marcada entre ambas medidas,
 # indicando una posible asimetría positiva asociada a episodios de lluvia de gran magnitud.
 
-library(ggplot2)
+# Boxplot con la distribución de las variables metereológicas
 
 # Se realizan los boxplots para ver descriptivamente las variables y detectar outliers. Sin embargo, es difícil comparar las 
 # variables porque poseen distintas magnitudes y unidades. Esto genera que, por ejemplo, la variable precipitación domine el 
 # gráfico por su escala; y que variables como frecuencia de días con precipitación y nubosidad queden con boxplots muy estrechos,
 # como puede evidenciarse a continuación:
-
-# Boxplot con la distribución de las variables metereológicas
 
 # Crear etiquetas más cortas para el gráfico
 datos_box <- datos_met_long %>%
@@ -307,18 +296,23 @@ datos_cor %>%
          `Humedad relativa (%)`) %>%
   head(10)
 
-library(plotly)
+# Georeferencia
 
-ggplot(datos_cor,
-       aes(x = `Temperatura maxima (grados C)`, `Temperatura minima (grados C)`,
-           `Precipitacion (mm)`, `Humedad relativa (%)`,
-           y = Mes,
-           text = Estacion)) +
-  geom_point()
+# Con el objetivo de incorporar una dimensión espacial al análisis, se construyó una tabla de coordenadas 
+# geográficas (latitud y longitud) para cada estación meteorológica. Posteriormente, esta información fue 
+# integrada a la base de datos original mediante el identificador de estación, permitiendo representar 
+# espacialmente las variables climáticas y desarrollar mapas interactivos en la aplicación Shiny.
 
-ggplotly()
+library(readxl)
 
-# Reveer este gráfico y empezar con georeferencia
+estaciones_smn <- read_excel("Datos crudos/estaciones_smn.xlsx")
+
+
+
+
+
+
+
 
 
 
