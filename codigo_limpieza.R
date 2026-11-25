@@ -307,13 +307,91 @@ library(readxl)
 
 estaciones_smn <- read_excel("Datos crudos/estaciones_smn.xlsx")
 
+estaciones <- datos_met %>%
+  distinct(Estacion)
 
+estaciones_name <- estaciones_smn %>%
+  distinct(NOMBRE)
 
+setdiff(estaciones$Estacion, estaciones_smn$NOMBRE) # Ver si hay diferencias entre los nombres de las estaciones
 
+datos_met_long <- datos_met_long %>%
+  mutate(Estacion = recode(Estacion, 
+                         "LA QUIACA OBS." = "LA QUIACA OBSERVATORIO",
+                         "VILLA MARIA DEL RIO SECO" = "VILLA DE MARIA DEL RIO SECO",
+                         "PILAR OBS." = "PILAR OBSERVATORIO",
+                         "BUENOS AIRES" = "BUENOS AIRES OBSERVATORIO",
+                         "PEHUAJÃ\u0093 AERO" = "PEHUAJO AERO",
+                         "SAN MIGUEL" = "MARIANO MORENO AERO"))
 
+estaciones_smn_filtrado <- estaciones_smn %>%
+  filter(NOMBRE %in% datos_met_long$Estacion) # Se dejan solo las estaciones que tengo en el dataset original.
 
+nrow(estaciones_smn_filtrado)
 
+# A continuación, se corrobora que no haya diferencias entre los nombres de las estaciones en los dos datasets.
 
+setdiff(datos_met_long$Estacion, estaciones_smn_filtrado$NOMBRE)
+setdiff(estaciones_smn_filtrado$NOMBRE, datos_met_long$Estacion)
+
+names(estaciones_smn_filtrado)
+
+estaciones_smn_filtrado <- estaciones_smn_filtrado %>%
+  rename(LAT_MIN = `...4`, LON_MIN = `...6`) # Se cambia el nombre de columna de minutos que vienen mal del excel.
+
+estaciones_smn_filtrado <- estaciones_smn_filtrado %>% # Se transforman las columnas a numéricas.
+  mutate(LATITUD = as.numeric(LATITUD), 
+         LAT_MIN = as.numeric(LAT_MIN), 
+         LONGITUD = as.numeric(LONGITUD),
+         LON_MIN = as.numeric(LON_MIN))
+
+# A continuación, se calculan las coordenadas decimales
+
+estaciones_smn_filtrado <- estaciones_smn_filtrado %>%
+  mutate(
+    lat = ifelse(
+      LATITUD < 0,
+      LATITUD - LAT_MIN/60,
+      LATITUD + LAT_MIN/60),
+    lon = ifelse(
+      LONGITUD < 0,
+      LONGITUD - LON_MIN/60,
+      LONGITUD + LON_MIN/60))
+
+# Se unen los dos datasets. Específicamente, se añaden al dataset original "datos_met_long" las colunmas que contienen las
+# coordenadas de las estaciones metereológicas (provincia, latitud y longitud). Los últimos datos viene del dataset obtenido 
+# del Servicio Metereológico Nacional.
+
+datos_geo <- datos_met_long %>%
+  left_join(estaciones_smn_filtrado %>% 
+              select(NOMBRE, PROVINCIA, lat, lon),
+            by = c("Estacion" = "NOMBRE"))
+
+# Verificación de la integración de ambos datasets.
+
+sum(is.na(datos_geo$lat))
+sum(is.na(datos_geo$lon))
+length(unique(datos_geo$Estacion))
+
+# En resumen, se incorporó información geográfica proveniente del catálogo oficial de estaciones meteorológicas 
+# del Servicio Meteorológico Nacional. Fue necesario realizar una cambios de los nombres entre ambas fuentes de los datasets
+# para asegurar la correcta coincidencia entre las estaciones. Posteriormente, las coordenadas geográficas expresadas en grados 
+# y minutos fueron transformadas a coordenadas decimales y vinculadas con la base meteorológica mediante una unión por nombre de 
+# estación como clave. Como resultado, se logró georreferenciar la totalidad de las 74 estaciones analizadas.
+
+# A continuación, se muestra un mapa de control para verificar visualmente a las estaciones:
+
+library(leaflet)
+
+datos_geo %>%
+  distinct(Estacion, lat, lon) %>%
+  leaflet() %>%
+  addTiles() %>%
+  addCircleMarkers(
+    lng = ~lon,
+    lat = ~lat,
+    popup = ~Estacion,
+    radius = 5)
 
 
 
