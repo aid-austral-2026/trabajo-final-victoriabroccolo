@@ -3,23 +3,21 @@
 # TP Final Broccolo
 
 ################################
-# SELECCIÓN 
+# 1. INTRODUCCIÓN 
 ################################
 
 # El Servicio Meteorológico Nacional publica diferentes mediciones que se realizan de temperaturas, viento, humedad, 
-# precipitaciones, etc. en diferentes lugares del país en la web (https://datos.gob.ar/dataset/?_tags_limit=0).
+# precipitaciones, entre otras, en diferentes lugares del país. Se pueden visualizar estas mediciones en la página web
+# oficial (https://datos.gob.ar/dataset/?_tags_limit=0).
+
 # En el presente trabajo, se utilizaron los datos publicados sobre mediciones efectuadas en diferentes puntos del país
-# en el último año.
+# en el último año, con el objetivo de analizar las diferencias de temperaturas en distintas partes de Argentina.
 
 ################################
-# IMORTACIÓN Y LIMPIEZA DE DATOS
+# 2. MATERIALES Y MÉTODOS
 ################################
 
 # 1. Importación de datos
-
-getwd()
-list.files()
-list.files("Datos crudos")
 
 library(readr)
 
@@ -101,26 +99,24 @@ ggplot(na_heatmap,
        y = "Variable meteorológica") +
   theme_minimal()
 
-# El análisis de datos faltantes mostró que la ausencia de información se concentra 
-# principalmente en las variables Velocidad del Viento, Precipitación y Frecuencia de días con precipitación. 
-# La inspección de la base reveló que gran parte de estos faltantes corresponden
-# a estaciones que no reportan dichas variables durante todo el período considerado, 
-# lo que sugiere un patrón estructural más que faltantes aleatorios. 
-# Dado que el objetivo del trabajo es descriptivo y exploratorio, 
-# se decidió conservar los valores faltantes como NA y excluirlos de los cálculos correspondientes, 
+# El análisis de datos faltantes mostró que la ausencia de información se concentra principalmente en las variables
+# Velocidad del Viento, Precipitación y Frecuencia de días con precipitación. La inspección de la base reveló que 
+# gran parte de estos faltantes corresponden a estaciones que no reportan dichas variables durante todo el período 
+# considerado, lo que sugiere un patrón estructural más que faltantes aleatorios. Dado que el objetivo del trabajo es 
+# descriptivo y exploratorio, se decidió conservar los valores faltantes como "NA" y excluirlos de los cálculos correspondientes, 
 # evitando la imputación de información potencialmente sesgada.
 
-
 ################################
-# ANÁLISIS DESCRIPTIVO
+# 3. ANÁLISIS DESCRIPTIVO Y RESULTADOS
 ################################
 
 class(datos_met)
 summary(datos_met_long)
 
+# 1. Descripción del dataset y métricas estadísticas
 
 # El conjunto de datos se encuentra conformado por 74 estaciones de servicio metereológico de Argentina, las cuales están
-# analizadas por 8 variables numéricas. Cada una de las mismas, tienen valores para los 12 meses del año, excepto por aquellas con
+# analizadas por 8 variables numéricas. Cada una de las mismas tiene valores para los 12 meses del año, excepto por aquellas con
 # valores faltantes previamente mencionados.
 
 # Para las variables del dataset, se analizan las métricas estadísticas descriptivas.
@@ -128,8 +124,10 @@ summary(datos_met_long)
 library(tidyverse)
 library(pastecs)
 
-str(datos_met_long) # La columna Valor es de tipo character (chr), no numérica.
-datos_met_long$Valor <- as.numeric(datos_met_long$Valor) # Convertimos la columna en numérica para poder calcular medidas estadísticas
+str(datos_met_long) # La columna Valor es de tipo character (chr), no numérica. Por lo tanto convertimos la columna en numérica
+                      #para poder calcular medidas estadísticas.
+
+datos_met_long$Valor <- as.numeric(datos_met_long$Valor) 
 
 # Resumen descriptivo por variable meteorológica:
 
@@ -171,7 +169,7 @@ knitr::kable(resumen, digits = 2)
 # relativamente simétricas; no obstante, la precipitación muestra una diferencia más marcada entre ambas medidas,
 # indicando una posible asimetría positiva asociada a episodios de lluvia de gran magnitud.
 
-# Boxplot con la distribución de las variables metereológicas
+# 2. Boxplot con la distribución de las variables metereológicas
 
 # Se realizan los boxplots para ver descriptivamente las variables y detectar outliers. Sin embargo, es difícil comparar las 
 # variables porque poseen distintas magnitudes y unidades. Esto genera que, por ejemplo, la variable precipitación domine el 
@@ -223,7 +221,7 @@ ggplot(datos_box,
     axis.text.x = element_text(size = 10,
                                lineheight = 0.9))
 
-# Matriz de correlaciones
+# 3. Matriz de correlaciones
 
 # Se realiza una matriz de correlaciones donde, en la diagonal, se ven las variables con su histograma y curva de densidad; 
 # por debajo, los gráficos de dispersión; y por encima, los coeficientes de correlación.
@@ -258,7 +256,11 @@ pairs.panels(datos_numericos,
 # relativa (0.40), entre otras. Además, hay correlaciones muy mínimas, lo que indica muy poca relación entre las variables, como
 # es el caso de humedad relativa con temperatura mínima (0.02).
 
-# Identificación de estaciones con valores extremos (junto con mes en que se indentificaron)
+# 4. Identificación de estaciones con valores extremos
+
+# A continuación, se realizó una identificación de las estaciones con valores extremos, junto con el mes en que se indentificaron. 
+# Si bien este trabajo se centra en analizar la variable temparatura de las bases, también se incorporaron más variables en el
+# siguiente análisis a modo informativo.
 
 # Estaciones con temperaturas máximas más altas
 
@@ -269,6 +271,13 @@ datos_cor %>%
          `Temperatura maxima (grados C)`) %>%
   head(10)
 
+# Puede observarse que las bases con temperaturas máximas más altas son Las Lomitas, La Rioja Aero, San Juan Aero, Catamarca Aero,
+# Santiago del Estero Aero, y Tinogasta, en los meses de diciembre y enero. Las Lomitas, provincia de Formosa, presentó la 
+# temperatura máxima más alta del último año (35.1 grados C). Todas las bases mencionadas se encuentran en las provincias de Formosa,
+# Catamarca, La Rioja, San Juan y Santiagio del Estero, las cuales son todas provincias del Norte Argentino (noreste y noroeste), 
+# salvo por San Juan que pertenece a la región de Cuyo. Dichas provincias son conocidas por la presencia de altas temperaturas, 
+# sobretodo en verano, coincidente con los meses en que se detectaron los picos máximos del año.
+
 # Estaciones con temperaturas mínimas más bajas
 
 datos_cor %>%
@@ -277,6 +286,11 @@ datos_cor %>%
          Mes, 
          `Temperatura minima (grados C)`) %>%
   head(10)
+
+# Puede observarse que las bases que presentan las temperaturas mínimas más bajas son la base Belgrano II en los meses de 
+# abril a mayo, los cuales corresponden a las estaciones de otoño-invierno, y la base Marambio también en los meses invernales.
+# Estos resultado son esperables, ya que estas dos bases están ubicadas en la Antartida, el punto más al sur del país. Belgrano II
+# fue la base que presentó la temperatura mínima más baja en el último año (-24.5 grados C).
 
 # Estaciones con mayores precipitaciones
 
@@ -287,6 +301,15 @@ datos_cor %>%
          `Precipitacion (mm)`) %>%
   head(10)
 
+# Puede observarse que las bases del país con mayores precipitaciones son Iguazu Aero, Tucuman Aero, Posadas Aero, Corrientes Aero,
+# Paso de los libres Aero, Resistencia Aero, Tartagal Aero, y Salta Aero. Dichas bases se encuentran en las provincias argentinas
+# de Misiones, Tucuman, Corrientes, Chaco y Salta, las cuales son todas provincias del norte del país (tanto noreste como noroeste).
+# La mayoría de los valores identificados se detectaron en el mes de abril. Sin embargo, la base con mayores precipitaciones del
+# último año fue Iguazu Aero, provincia de Misiones, en el mes de octubre (237 mm). Otros meses en los cuales se detectó un máximo
+# de precipitaciones fueron enero y mayo. Es decir, las provincias con mayores precipitaciones en Argentina son aquellas de la 
+# región del norte, en las estaciones de verano, otoño y primavera, y se destaca la ausencia de precipitaciones en los meses
+# invernales.
+
 # Estaciones con mayor humedad
 
 datos_cor %>%
@@ -296,12 +319,35 @@ datos_cor %>%
          `Humedad relativa (%)`) %>%
   head(10)
 
-# Georeferencia
+# Puede observarse que las estaciones con mayor humedad fueron Iguazu Aero, Rio Grande B.A., Punta Indio B.A., Tartagal Aero, y
+# Dolores Aero. Estas bases se encuentran en las provincias de Misiones, Tierra del Fuego, Buenos Aires, y Salta, lo cual indica
+# que la mayor concentración de humedad está distribuida por el norte, centro y sur del país. La base Iguazu Aero, provincia de
+# Misiones, fue la que presentó el máximo de humedad relativa en el último año (88.1%), en el mes de junio. Sin enmabrgo, las bases
+# con más registros máximos de humedad relativa fueron Rio Grande B.A., provicia de Tierra del Fuego, y Punta Indio B.A., 
+# provincia de Buenos Aires. Los meses en que se detectaron los máximos registros de humedad fueron de abril a julio, es decir, 
+# los meses pertenecientes a las estaciones otoño-invierno.
+
+# Estaciones con mayor nubosidad
+
+datos_cor %>%
+  arrange(desc(`Nubosidad total (octavos)`)) %>%
+  select(Estacion,
+         Mes,
+         `Nubosidad total (octavos)`) %>%
+  head(10)
+
+# Puede observarse que la principal base con mayor nubosidad total fue Orcadas, seguida de Marambio, las cuales se encuentran
+# en la Antartida. La base Orcadas detectó el máximo registro de nubosidad total en el mes de enero (7.5 octavos). Otros meses 
+# en los cuales se identificaron valores máximos fueron febrero, marzo, abril, mayo, septiembre, octubre, noviembre y diciembre.
+# Es decir, las bases del punto más sur del país, la Antartida, registraron la mayor nubosidad en verano, otoño y primavera, 
+# destacando la presencia de nubosisdad en los meses invernales.
+
+# 5. Georeferencia
 
 # Con el objetivo de incorporar una dimensión espacial al análisis, se construyó una tabla de coordenadas 
 # geográficas (latitud y longitud) para cada estación meteorológica. Posteriormente, esta información fue 
 # integrada a la base de datos original mediante el identificador de estación, permitiendo representar 
-# espacialmente las variables climáticas y desarrollar mapas interactivos en la aplicación Shiny.
+# espacialmente las variables climáticas.
 
 library(readxl)
 
@@ -315,7 +361,7 @@ estaciones_name <- estaciones_smn %>%
 
 setdiff(estaciones$Estacion, estaciones_smn$NOMBRE) # Ver si hay diferencias entre los nombres de las estaciones
 
-datos_met_long <- datos_met_long %>%
+datos_met_long <- datos_met_long %>% # Se cambian los nombres de las estaciones para que coincidan con el dataset original.
   mutate(Estacion = recode(Estacion, 
                          "LA QUIACA OBS." = "LA QUIACA OBSERVATORIO",
                          "VILLA MARIA DEL RIO SECO" = "VILLA DE MARIA DEL RIO SECO",
@@ -337,7 +383,7 @@ setdiff(estaciones_smn_filtrado$NOMBRE, datos_met_long$Estacion)
 names(estaciones_smn_filtrado)
 
 estaciones_smn_filtrado <- estaciones_smn_filtrado %>%
-  rename(LAT_MIN = `...4`, LON_MIN = `...6`) # Se cambia el nombre de columna de minutos que vienen mal del excel.
+  rename(LAT_MIN = `...4`, LON_MIN = `...6`) # Se cambia el nombre de las columnas de minutos que vienen mal del excel.
 
 estaciones_smn_filtrado <- estaciones_smn_filtrado %>% # Se transforman las columnas a numéricas.
   mutate(LATITUD = as.numeric(LATITUD), 
@@ -374,7 +420,7 @@ sum(is.na(datos_geo$lon))
 length(unique(datos_geo$Estacion))
 
 # En resumen, se incorporó información geográfica proveniente del catálogo oficial de estaciones meteorológicas 
-# del Servicio Meteorológico Nacional. Fue necesario realizar una cambios de los nombres entre ambas fuentes de los datasets
+# del Servicio Meteorológico Nacional. Fue necesario realizar cambios de los nombres en ambos datasets
 # para asegurar la correcta coincidencia entre las estaciones. Posteriormente, las coordenadas geográficas expresadas en grados 
 # y minutos fueron transformadas a coordenadas decimales y vinculadas con la base meteorológica mediante una unión por nombre de 
 # estación como clave. Como resultado, se logró georreferenciar la totalidad de las 74 estaciones analizadas.
@@ -393,6 +439,41 @@ datos_geo %>%
     popup = ~Estacion,
     radius = 5)
 
+# Mapas y gráficos de temperatura 
 
+# 1. Bases metereológicas con temperaturas promedio
+
+# Se filtra solo la variable que se quiere analizar. En este caso, temperatura media. Además se realizan mapas y gráficos para
+# cuatros meses claves en las distintas estaciones del año: enero para verano, abril para otoño, julio para invierno, y 
+# octubre para primvera. El objetivo es indentificar cómo se comporta la temperatura media en cada estación del año, para las
+# distintas estaciones metereológicas del país.
+
+datos_temp <- datos_geo %>%
+  filter(`Valor Medio de` == "Temperatura (grados C)")
+
+datos_temp_ene <- datos_geo %>%
+  filter(`Valor Medio de` == "Temperatura (grados C)",
+         Mes == "Ene")
+
+datos_temp_abr <- datos_geo %>%
+  filter(`Valor Medio de` == "Temperatura (grados C)",
+         Mes == "Abr")
+
+datos_temp_jul <- datos_geo %>%
+  filter(`Valor Medio de` == "Temperatura (grados C)",
+         Mes == "Jul")
+
+datos_temp_oct <- datos_geo %>%
+  filter(`Valor Medio de` == "Temperatura (grados C)",
+         Mes == "Oct")
+
+# 2. Bases metereológicas con temperaturas altas
+
+# 3. Bases metereológicas con temperaturas bajas
+
+
+################################
+# 4. CONCLUSIONES
+################################
 
 
